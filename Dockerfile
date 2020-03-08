@@ -9,7 +9,7 @@ WORKDIR $HOME
 COPY ./ $HOME/ml-enabler
 WORKDIR $HOME/ml-enabler
 
-RUN apk add postgresql-client postgresql-dev curl nginx nodejs npm yarn python3 py3-pip
+RUN apk add postgresql-client postgresql-dev curl nginx nodejs npm yarn python3 py3-pip geos
 
 RUN cd web \
     && yarn install \
