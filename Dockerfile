@@ -9,7 +9,12 @@ WORKDIR $HOME
 COPY ./ $HOME/ml-enabler
 WORKDIR $HOME/ml-enabler
 
-RUN apk add postgresql-client postgresql-dev curl nginx nodejs npm yarn python3 py3-pip geos
+RUN apk add openrc \
+    postgresql-client postgresql-dev \
+    curl nginx \
+    nodejs npm yarn \
+    python3 python3-dev py3-pip py3-psycopg2 \
+    geos gcc libc-dev geos-dev
 
 RUN cd web \
     && yarn install \
@@ -20,9 +25,9 @@ RUN \
   pip3 install gunicorn; \
   pip3 install -r requirements.txt
 
-RUN cp ./cloudformation/nginx.conf /etc/nginx/sites-enabled/default
+RUN cp ./cloudformation/nginx.conf /etc/nginx/nginx.conf
 
-CMD service nginx restart \
+CMD rc-service nginx restart \
     && echo "CREATE DATABASE ${POSTGRES_DB}" | psql postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_ENDPOINT}:${POSTGRES_PORT} || true \
     && echo "CREATE EXTENSION POSTGIS" | psql postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_ENDPOINT}:${POSTGRES_PORT}/${POSTGRES_DB} || true \
     && flask db upgrade || true \
