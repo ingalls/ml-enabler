@@ -37,7 +37,7 @@ async function main() {
         console.error(process.env);
 
         const model_id = get_model_id(model)
-        const prediction_id = get_model_id(model)
+        const prediction_id = get_prediction_id(model)
 
         const links = {
             modelLink: model
@@ -57,10 +57,10 @@ async function main() {
 
         const finalLinks = await docker(tmp, model);
 
-        await set_link(model_id, prediction_id, {
-            saveLink: finalLinks.save,
-            dockerLink: finalLinks.docker
-        });
+        links.saveLink = finalLinks.save;
+        links.dockerLink = finalLinks.docker;
+
+        await set_link(model_id, prediction_id, links);
 
         dd.kill();
     } catch(err) {
@@ -92,7 +92,6 @@ function log_link() {
             }, (err, res) => {
                 if (err) return reject(err);
 
-                console.error(JSON.stringify(res));
                 if (
                     !res.jobs[0]
                     || !res.jobs[0].container
@@ -102,7 +101,7 @@ function log_link() {
                         return link();
                     }, 10000);
                 } else {
-                    resolve(res.jobs[0].attempts[0].container.logStreamName)
+                    resolve(res.jobs[0].container.logStreamName)
                 }
             });
         }
@@ -111,7 +110,7 @@ function log_link() {
 
 function set_link(model, prediction, patch) {
     return new Promise((resolve, reject) => {
-        console.error('ok - saving link state');
+        console.error(`ok - saving model (${model}), prediction (${prediction}) state: ${JSON.stringify(patch)}`);
 
         request({
             method: 'PATCH',
@@ -121,7 +120,11 @@ function set_link(model, prediction, patch) {
         }, (err, res) => {
             if (err) return reject(err);
 
-            return resolve(res);
+            if (res.statusCode === 200) {
+                return resolve(res);
+            } else {
+                return reject(res.statusCode + ':' + res.body);
+            }
         });
     });
 }
