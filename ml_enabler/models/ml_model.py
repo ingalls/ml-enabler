@@ -246,7 +246,7 @@ class Prediction(db.Model):
     model_link =  db.Column(db.String)
     docker_link =  db.Column(db.String)
     save_link = db.Column(db.String)
-    inf_lst = db.Column(db.String)
+    inf_list = db.Column(db.String)
     inf_type = db.Column(db.String)
 
     def create(self, prediction_dto: PredictionDTO):
@@ -257,7 +257,7 @@ class Prediction(db.Model):
         self.docker_url = prediction_dto.docker_url
         self.bbox = ST_GeomFromText(bbox_to_polygon_wkt(prediction_dto.bbox), 4326)
         self.tile_zoom = prediction_dto.tile_zoom
-        self.inf_lst = prediction_dto.inf_lst
+        self.inf_list = prediction_dto.inf_list
         self.inf_type = predition_dto.inf_type
 
         db.session.add(self)
@@ -305,7 +305,7 @@ class Prediction(db.Model):
             Prediction.model_id,
             Prediction.tile_zoom,
             Prediction.version_id,
-            Prediction.inf_lst,
+            Prediction.inf_list,
             Prediction.inf_type
         ).filter(Prediction.id == prediction_id)
 
@@ -330,7 +330,7 @@ class Prediction(db.Model):
             Prediction.model_link,
             Prediction.docker_link,
             Prediction.save_link,
-            Prediction.inf_lst,
+            Prediction.inf_list,
             Prediction.inf_type
         ).filter(Prediction.model_id == model_id)
 
@@ -397,7 +397,7 @@ class Prediction(db.Model):
         prediction_dto.model_link = prediction[8]
         prediction_dto.docker_link = prediction[9]
         prediction_dto.save_link = prediction[10]
-        predition_dto.inf_lst = prediction[11]
+        predition_dto.inf_list = prediction[11]
         prediction_dto.inf_type = prediction[12]
 
         return prediction_dto
