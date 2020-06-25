@@ -246,6 +246,8 @@ class Prediction(db.Model):
     model_link =  db.Column(db.String)
     docker_link =  db.Column(db.String)
     save_link = db.Column(db.String)
+    inf_lst = db.Column(db.String)
+    inf_type = db.Column(db.String)
 
     def create(self, prediction_dto: PredictionDTO):
         """ Creates and saves the current model to the DB """
@@ -255,6 +257,8 @@ class Prediction(db.Model):
         self.docker_url = prediction_dto.docker_url
         self.bbox = ST_GeomFromText(bbox_to_polygon_wkt(prediction_dto.bbox), 4326)
         self.tile_zoom = prediction_dto.tile_zoom
+        self.inf_list = prediction_dto.inf_list
+        self.inf_type = predition_dto.inf_type
 
         db.session.add(self)
         db.session.commit()
@@ -283,6 +287,7 @@ class Prediction(db.Model):
             PredictionTile.quadkey,
             ST_AsGeoJSON(PredictionTile.quadkey_geom).label('geometry'),
             PredictionTile.predictions,
+            PredictionTile.validity
         ).filter(PredictionTile.prediction_id == self.id).yield_per(100)
 
     @staticmethod
