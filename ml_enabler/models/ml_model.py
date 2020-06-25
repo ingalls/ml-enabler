@@ -257,7 +257,7 @@ class Prediction(db.Model):
         self.docker_url = prediction_dto.docker_url
         self.bbox = ST_GeomFromText(bbox_to_polygon_wkt(prediction_dto.bbox), 4326)
         self.tile_zoom = prediction_dto.tile_zoom
-        self.inf_list = prediction_dto.inf_list
+        self.inf_lst = prediction_dto.inf_lst
         self.inf_type = predition_dto.inf_type
 
         db.session.add(self)
@@ -304,7 +304,9 @@ class Prediction(db.Model):
             ST_AsGeoJSON(ST_Envelope(Prediction.bbox)).label('bbox'),
             Prediction.model_id,
             Prediction.tile_zoom,
-            Prediction.version_id
+            Prediction.version_id,
+            Prediction.inf_lst,
+            Prediction.inf_type
         ).filter(Prediction.id == prediction_id)
 
         return Prediction.query.get(prediction_id)
@@ -327,7 +329,9 @@ class Prediction(db.Model):
             Prediction.log_link,
             Prediction.model_link,
             Prediction.docker_link,
-            Prediction.save_link
+            Prediction.save_link,
+            Prediction.inf_lst,
+            Prediction.inf_type
         ).filter(Prediction.model_id == model_id)
 
         return query.all()
@@ -393,6 +397,8 @@ class Prediction(db.Model):
         prediction_dto.model_link = prediction[8]
         prediction_dto.docker_link = prediction[9]
         prediction_dto.save_link = prediction[10]
+        predition_dto.inf_lst = prediction[11]
+        prediction_dto.inf_type = prediction[12]
 
         return prediction_dto
 
