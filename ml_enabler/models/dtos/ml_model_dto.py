@@ -22,6 +22,7 @@ class PredictionDTO(Model):
     docker_url = StringType(serialized_name='dockerUrl')
     bbox = ListType(FloatType, required=True)
     tile_zoom = IntType(serialized_name='tileZoom', required=True)
+    inf_list = StringType(serialized_name='infList', required=True)
 
     """ Asset Status
         log_link - store a link to the AWS CloudWatch Console

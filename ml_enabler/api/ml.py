@@ -1,5 +1,5 @@
 import ml_enabler.config as CONFIG
-import io, os, pyproj, json, csv, geojson, boto3
+import io, os, pyproj, json, csv, geojson, boto3, mercantile
 from tiletanic import tilecover, tileschemes
 from shapely.geometry import shape
 from shapely.ops import transform
@@ -17,6 +17,8 @@ from ml_enabler.models.utils import NotFound, VersionNotFound, \
     PredictionsNotFound, ImageryNotFound
 from ml_enabler.utils import version_to_array, geojson_bounds, bbox_str_to_list, validate_geojson, InvalidGeojson
 from sqlalchemy.exc import IntegrityError
+import numpy as np
+
 
 class MetaAPI(Resource):
     """
@@ -393,14 +395,47 @@ class PredictionExport(Resource):
         stream = PredictionService.export(prediction_id)
 
         inferences = PredictionService.inferences(prediction_id)
+
+        pred = PredictionService.get_prediction_by_id(prediction_id)
+
         first = False
 
         if req_inferences != 'all':
             inferences = [ req_inferences ]
 
+        def generate_npz():
+        #only works for binary right now, need to bring in the inf_list column from predictions database
+            labels_dict ={}
+            print(labels_dict)
+            l = np.array([0, 0]) #bad
+            for row in stream:
+                if req_inferences != 'all' and row[3].get(req_inferences) is None:
+                    continue
+
+                if req_inferences != 'all' and row[3].get(req_inferences) <= req_threshold:
+                    continue
+                print(pred.inf_list)
+                if row[4]: #won't see NUll, unvalidated vals
+                    print(row[1])
+                    t = '-'.join([str(i) for i in mercantile.quadkey_to_tile(row[1])])
+                    print(t)
+                    if list(row[4].values())[0]: #validated and true, keep original label, but how to determine the original label
+                        i = inf_lst.index(list(row[4].keys())[0]) # find where this is in inf_list
+                        l[i] = 1  #this depends on key name, which depends on req_inferences? , Inferences List order
+                        labels_dict.update({t, l})
+                    else:
+                        l = np.array([1, 0])
+                        labels_dict.update({t, l})
+                    print(labels_dict)
+                        #this depends on key name, also depends on how model is previously trained
+                        # are POI models have background as index 0, and POI as index 1  Inferences List order?
+            return json.dumps(labels_dict) #convert to something binary that can be sent via flask
+
+            #write out npz file
+            #np.save('export.npz', **labels_dict)
+
         def generate():
             nonlocal first
-
             if req_format == "geojson":
                 yield '{ "type": "FeatureCollection", "features": ['
             elif req_format == "csv":
@@ -411,7 +446,6 @@ class PredictionExport(Resource):
                 yield output.getvalue()
 
             for row in stream:
-
                 if req_inferences != 'all' and row[3].get(req_inferences) is None:
                     continue
 
@@ -419,11 +453,21 @@ class PredictionExport(Resource):
                     continue
 
                 if req_format == "geojson" or req_format == "geojsonld":
+                    properties_dict = {}
+                    valid_dict = {}
+                    if row[4] == Null:
+                        valid_dict['valid'] = 'unknown'
+                    if list(row[4])[0]:
+                        valid_dict['valid'] = True
+                    else:
+                        valid_dict['valid'] = False
+
+                    properties_dict = row[3].update(valid_dict)
                     feat = {
                         "id": row[0],
                         "quadkey": row[1],
                         "type": "Feature",
-                        "properties": row[3],
+                        "properties": properties_dict,
                         "geometry": json.loads(row[2])
                     }
 
@@ -442,8 +486,9 @@ class PredictionExport(Resource):
                         rowdata.append(row[3].get(inf, 0.0))
                     csv.writer(output, quoting=csv.QUOTE_NONNUMERIC).writerow(rowdata)
                     yield output.getvalue()
+
                 else:
-                    raise "Unsupported export format"
+                    return {"status": 501, "error": "not a valid export type, valid export types are: geojson, csv, and npz"}, 501
 
             if req_format == "geojson":
                 yield ']}'
@@ -456,15 +501,30 @@ class PredictionExport(Resource):
             mime = "application/geo+json"
         elif req_format == "geojsonld":
             mime = "application/geo+json-seq"
+        elif req_format == "npz":
+            mime = "application/npz"
+        if req_format == "npz":
+            print('cats')
+            npz = generate_npz()
 
-        return Response(
-            generate(),
-            mimetype = mime,
-            status = 200,
-            headers = {
-                "Content-Disposition": 'attachment; filename="export."' + req_format
-            }
-        )
+            #modify this to send binary blog- look at flask docs
+            return Response(
+                generate(), #get rid of this, because npz doesn't yield things
+                mimetype = mime,
+                status = 200,
+                headers = {
+                    "Content-Disposition": 'attachment; filename="export."' + req_format
+                }
+            )
+        else:
+            return Response(
+                generate(),
+                mimetype = mime,
+                status = 200,
+                headers = {
+                    "Content-Disposition": 'attachment; filename="export."' + req_format
+                }
+            )
 
 class PredictionInfAPI(Resource):
     """ Add GeoJSON to SQS Inference Queue """

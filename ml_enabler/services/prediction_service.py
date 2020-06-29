@@ -22,6 +22,7 @@ class PredictionService():
         prediction_dto.version_id = version_id
         prediction_dto.bbox = payload['bbox']
         prediction_dto.tile_zoom = payload['tileZoom']
+        prediction_dto.inf_list = payload['infList']
         prediction_dto.validate()
 
         new_prediction = Prediction()
