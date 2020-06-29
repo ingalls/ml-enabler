@@ -407,7 +407,7 @@ class PredictionExport(Resource):
         #only works for binary right now, need to bring in the inf_list column from predictions database
             labels_dict ={}
             print(labels_dict)
-            l = np.array([0, 0]) #bad
+
             for row in stream:
                 if req_inferences != 'all' and row[3].get(req_inferences) is None:
                     continue
@@ -415,20 +415,30 @@ class PredictionExport(Resource):
                 if req_inferences != 'all' and row[3].get(req_inferences) <= req_threshold:
                     continue
                 print(pred.inf_list)
-                if row[4]: #won't see NUll, unvalidated vals
-                    print(row[1])
+                print(row[4])
+
+                if row[4]:
+                    i_lst = pred.inf_list.split(",")
+                    raw_pred = [row[3][i_lst[0]], row[3][i_lst[1]]]
+                    l = [1 if score >= .5 else 0 for score in raw_pred] #replace with threshold value - need to add to db?
+                    print(raw_pred)
+
                     t = '-'.join([str(i) for i in mercantile.quadkey_to_tile(row[1])])
-                    print(t)
-                    if list(row[4].values())[0]: #validated and true, keep original label, but how to determine the original label
-                        i = inf_lst.index(list(row[4].keys())[0]) # find where this is in inf_list
-                        l[i] = 1  #this depends on key name, which depends on req_inferences? , Inferences List order
-                        labels_dict.update({t, l})
+                    #validated and true condition
+                    if list(row[4].values())[0]:
+                        #i = pred.inf_list.index(list(row[4].keys())[0])
+                        #l[i] = 1
+                        labels_dict.update({t:l})
+                        print(l)
+
+                    #validated and false condition
                     else:
-                        l = np.array([1, 0])
-                        labels_dict.update({t, l})
-                    print(labels_dict)
-                        #this depends on key name, also depends on how model is previously trained
-                        # are POI models have background as index 0, and POI as index 1  Inferences List order?
+                        #i = pred.inf_list.index(list(row[4].keys())[0])
+                        l = l[::-1]
+                        print(l)
+                        labels_dict.update({t:l})
+                print(labels_dict)
+                print(type(labels_dict))
             return json.dumps(labels_dict) #convert to something binary that can be sent via flask
 
             #write out npz file
@@ -503,6 +513,7 @@ class PredictionExport(Resource):
             mime = "application/geo+json-seq"
         elif req_format == "npz":
             mime = "application/npz"
+        print(req_format)
         if req_format == "npz":
             print('cats')
             npz = generate_npz()
