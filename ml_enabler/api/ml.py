@@ -517,10 +517,14 @@ class PredictionExport(Resource):
         if req_format == "npz":
             print('cats')
             npz = generate_npz()
+            #print(npz)
+            #print(make_response(npz))
 
             #modify this to send binary blog- look at flask docs
             return Response(
-                generate(), #get rid of this, because npz doesn't yield things
+                #generate(), #get rid of this, because npz doesn't yield things
+                response = npz,
+                #response.headers['content-type'] = 'application/x-protobuf'
                 mimetype = mime,
                 status = 200,
                 headers = {
