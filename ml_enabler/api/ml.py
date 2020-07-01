@@ -388,9 +388,10 @@ class PredictionExport(Resource):
     def get(self, model_id, prediction_id):
         req_format = request.args.get('format', 'geojson')
         req_inferences = request.args.get('inferences', 'all')
-        req_threshold = request.args.get('threshold', '0')
+        req_threshold = request.args.get('threshold', '0.5')
 
         req_threshold = float(req_threshold)
+        print(req_threshold)
 
         stream = PredictionService.export(prediction_id)
 
@@ -404,45 +405,61 @@ class PredictionExport(Resource):
             inferences = [ req_inferences ]
 
         def generate_npz():
-        #only works for binary right now, need to bring in the inf_list column from predictions database
             labels_dict ={}
-            print(labels_dict)
-
             for row in stream:
                 if req_inferences != 'all' and row[3].get(req_inferences) is None:
                     continue
 
                 if req_inferences != 'all' and row[3].get(req_inferences) <= req_threshold:
                     continue
-                print(pred.inf_list)
-                print(row[4])
 
                 if row[4]:
+
+                    #inference types ordered
                     i_lst = pred.inf_list.split(",")
+
+                    #convert raw predictions into 0 or 1 based on threshold
                     raw_pred = [row[3][i_lst[0]], row[3][i_lst[1]]]
-                    l = [1 if score >= .5 else 0 for score in raw_pred] #replace with threshold value - need to add to db?
-                    print(raw_pred)
+                    l = [1 if score >= req_threshold else 0 for score in raw_pred]
 
+                    #convert quadkey to x-y-z
                     t = '-'.join([str(i) for i in mercantile.quadkey_to_tile(row[1])])
-                    #validated and true condition
-                    if list(row[4].values())[0]:
-                        #i = pred.inf_list.index(list(row[4].keys())[0])
-                        #l[i] = 1
-                        labels_dict.update({t:l})
-                        print(l)
 
-                    #validated and false condition
+                    # special case for binary (checking len doesn't necessarily work)
+                    # could we add something so the user specifies it's a binary classification ml type?
+                    # to avoid having [0,0]
+                    if len(i_lst) == 2:
+                        if list(row[4].values())[0]: #validated and true, keep original
+                            print('validated and true')
+                            labels_dict.update({t:l})
+                        else:
+                            print('validated and false, flipping label')
+                            if l == [1, 0]:
+                                l = [0, 1]
+                            else:
+                                l = [1, 0]
+                            labels_dict.update({t:l})
+                        print(labels_dict)
+
                     else:
-                        #i = pred.inf_list.index(list(row[4].keys())[0])
-                        l = l[::-1]
-                        print(l)
+                        # works for multi-class
+                        for x in list(row[4].keys()):
+                            print(i_lst)
+                            i = i_lst.index(x)
+                            print(i)
+                            if row[4][x]: #if validated true
+                                print('validated and true')
+                                labels_dict.update({t:l})
+                            else:
+                                if l[i] == 0:
+                                    l[i] = 1
+                                else:
+                                    l[i] = 0
                         labels_dict.update({t:l})
-                print(labels_dict)
-                print(type(labels_dict))
-            return json.dumps(labels_dict) #convert to something binary that can be sent via flask
-
-            #write out npz file
-            #np.save('export.npz', **labels_dict)
+                        print(labels_dict)
+            bytestream = io.BytesIO()
+            np.savez(bytestream, **labels_dict)
+            return bytestream.getvalue()
 
         def generate():
             nonlocal first
@@ -516,15 +533,8 @@ class PredictionExport(Resource):
         print(req_format)
         if req_format == "npz":
             print('cats')
-            npz = generate_npz()
-            #print(npz)
-            #print(make_response(npz))
-
-            #modify this to send binary blog- look at flask docs
             return Response(
-                #generate(), #get rid of this, because npz doesn't yield things
-                response = npz,
-                #response.headers['content-type'] = 'application/x-protobuf'
+                response = generate_npz(),
                 mimetype = mime,
                 status = 200,
                 headers = {
