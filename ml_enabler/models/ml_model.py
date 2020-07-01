@@ -258,7 +258,7 @@ class Prediction(db.Model):
         self.bbox = ST_GeomFromText(bbox_to_polygon_wkt(prediction_dto.bbox), 4326)
         self.tile_zoom = prediction_dto.tile_zoom
         self.inf_list = prediction_dto.inf_list
-        self.inf_type = predition_dto.inf_type
+        self.inf_type = prediction_dto.inf_type
 
         db.session.add(self)
         db.session.commit()
@@ -397,7 +397,7 @@ class Prediction(db.Model):
         prediction_dto.model_link = prediction[8]
         prediction_dto.docker_link = prediction[9]
         prediction_dto.save_link = prediction[10]
-        predition_dto.inf_list = prediction[11]
+        prediction_dto.inf_list = prediction[11]
         prediction_dto.inf_type = prediction[12]
 
         return prediction_dto

@@ -440,7 +440,7 @@ class PredictionExport(Resource):
                             labels_dict.update({t:l})
 
                     else:
-                        # works for multi-class
+                        # works for multi-label
                         for x in list(row[4].keys()):
                             print(i_lst)
                             i = i_lst.index(x)
