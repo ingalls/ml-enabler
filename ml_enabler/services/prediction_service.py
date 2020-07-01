@@ -23,6 +23,7 @@ class PredictionService():
         prediction_dto.bbox = payload['bbox']
         prediction_dto.tile_zoom = payload['tileZoom']
         prediction_dto.inf_list = payload['infList']
+        prediction_dto.inf_binary = payload['infBinary']
         prediction_dto.validate()
 
         new_prediction = Prediction()

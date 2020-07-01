@@ -248,6 +248,7 @@ class Prediction(db.Model):
     save_link = db.Column(db.String)
     inf_list = db.Column(db.String)
     inf_type = db.Column(db.String)
+    inf_binary = db.Column(db.Boolean) #should this be String? 
 
     def create(self, prediction_dto: PredictionDTO):
         """ Creates and saves the current model to the DB """
@@ -259,6 +260,7 @@ class Prediction(db.Model):
         self.tile_zoom = prediction_dto.tile_zoom
         self.inf_list = prediction_dto.inf_list
         self.inf_type = prediction_dto.inf_type
+        self.inf_binary = prediction_dto.inf_binary
 
         db.session.add(self)
         db.session.commit()
@@ -306,7 +308,8 @@ class Prediction(db.Model):
             Prediction.tile_zoom,
             Prediction.version_id,
             Prediction.inf_list,
-            Prediction.inf_type
+            Prediction.inf_type, 
+            Prediction.inf_binary
         ).filter(Prediction.id == prediction_id)
 
         return Prediction.query.get(prediction_id)
@@ -331,7 +334,8 @@ class Prediction(db.Model):
             Prediction.docker_link,
             Prediction.save_link,
             Prediction.inf_list,
-            Prediction.inf_type
+            Prediction.inf_type, 
+            Prediction.inf_binary
         ).filter(Prediction.model_id == model_id)
 
         return query.all()
@@ -399,6 +403,7 @@ class Prediction(db.Model):
         prediction_dto.save_link = prediction[10]
         prediction_dto.inf_list = prediction[11]
         prediction_dto.inf_type = prediction[12]
+        prediction_dto.inf_binary = prediction[13]
 
         return prediction_dto
 

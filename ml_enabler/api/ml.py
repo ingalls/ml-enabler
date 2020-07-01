@@ -427,7 +427,18 @@ class PredictionExport(Resource):
                     # special case for binary (checking len doesn't necessarily work)
                     # could we add something so the user specifies it's a binary classification ml type?
                     # to avoid having [0,0]
-                    if len(i_lst) == 2: 
+                    # in db add column for binary model (boolean), checkbox in UI 
+                    #add inf_binary 
+                    # add error if inf_binary is set to true and inf_lst is not two, split inf_lst, map and trim to avoid space
+                    
+                    if (pred.inf_binary) and (len(i_lst) != 2): 
+                        # need to actually raise error, 4xx because it's a user error
+                            return {
+                            "status": 400,
+                             "error": "binary models must have two catagories"
+                            }, 400
+                    
+                    if (len(i_lst) == 2) and (pred.inf_binary): 
                         if list(row[4].values())[0]: #validated and true, keep original
                             print('validated and true')
                             labels_dict.update({t:l})
@@ -441,15 +452,9 @@ class PredictionExport(Resource):
 
                     else:
                         # works for multi-label
-                        for x in list(row[4].keys()):
-                            print(i_lst)
-                            i = i_lst.index(x)
-                            print(i)
-                            if row[4][x]: #if validated true
-                                print('validated and true')
-                                labels_dict.update({t:l})
-                            else:
-                                print('validated and false, flipping binary label value at index')
+                        for key in list(row[4].keys()):
+                            i = i_lst.index(key)
+                            if not row[4][key]:
                                 if l[i] == 0:
                                     l[i] = 1
                                 else:
