@@ -427,7 +427,7 @@ class PredictionExport(Resource):
                     # special case for binary (checking len doesn't necessarily work)
                     # could we add something so the user specifies it's a binary classification ml type?
                     # to avoid having [0,0]
-                    if len(i_lst) == 2:
+                    if len(i_lst) == 2: 
                         if list(row[4].values())[0]: #validated and true, keep original
                             print('validated and true')
                             labels_dict.update({t:l})
