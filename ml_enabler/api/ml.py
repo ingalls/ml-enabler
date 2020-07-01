@@ -15,7 +15,7 @@ from ml_enabler.services.prediction_service import PredictionService, Prediction
 from ml_enabler.services.imagery_service import ImageryService
 from ml_enabler.models.utils import NotFound, VersionNotFound, \
     PredictionsNotFound, ImageryNotFound
-from ml_enabler.utils import version_to_array, geojson_bounds, bbox_str_to_list, validate_geojson, InvalidGeojson
+from ml_enabler.utils import version_to_array, geojson_bounds, bbox_str_to_list, validate_geojson, InvalidGeojson, NoValid
 from sqlalchemy.exc import IntegrityError
 import numpy as np
 
@@ -391,8 +391,6 @@ class PredictionExport(Resource):
         req_threshold = request.args.get('threshold', '0.5')
 
         req_threshold = float(req_threshold)
-        print(req_threshold)
-
         stream = PredictionService.export(prediction_id)
 
         inferences = PredictionService.inferences(prediction_id)
@@ -412,8 +410,9 @@ class PredictionExport(Resource):
 
                 if req_inferences != 'all' and row[3].get(req_inferences) <= req_threshold:
                     continue
-
                 if row[4]:
+                    print(row[4])
+                    #handle if nothing is validated 
                     #inference types ordered
                     i_lst = pred.inf_list.split(",")
 
@@ -435,15 +434,13 @@ class PredictionExport(Resource):
                         # need to actually raise error, 4xx because it's a user error
                             return {
                             "status": 400,
-                             "error": "binary models must have two catagories"
+                            "error": "binary models must have two catagories"
                             }, 400
                     
                     if (len(i_lst) == 2) and (pred.inf_binary): 
                         if list(row[4].values())[0]: #validated and true, keep original
-                            print('validated and true')
                             labels_dict.update({t:l})
                         else:
-                            print('validated and false, flipping label')
                             if l == [1, 0]:
                                 l = [0, 1]
                             else:
@@ -460,6 +457,12 @@ class PredictionExport(Resource):
                                 else:
                                     l[i] = 0
                         labels_dict.update({t:l})
+                # else: 
+                #     raise  NoValid 
+
+            if not labels_dict: 
+                raise NoValid
+
             bytestream = io.BytesIO()
             np.savez(bytestream, **labels_dict)
             return bytestream.getvalue()
@@ -485,12 +488,10 @@ class PredictionExport(Resource):
                 if req_format == "geojson" or req_format == "geojsonld":
                     properties_dict = {}
                     valid_dict = {}
-                    if row[4] == Null:
-                        valid_dict['valid'] = 'unknown'
-                    if list(row[4])[0]:
-                        valid_dict['valid'] = True
-                    else:
-                        valid_dict['valid'] = False
+                    # if list(row[4])[0]:
+                    #     valid_dict['valid'] = True
+                    # else:
+                    #     valid_dict['valid'] = False
 
                     properties_dict = row[3].update(valid_dict)
                     feat = {
@@ -533,10 +534,10 @@ class PredictionExport(Resource):
             mime = "application/geo+json-seq"
         elif req_format == "npz":
             mime = "application/npz"
-        print(req_format)
         if req_format == "npz":
-            print('cats')
-            return Response(
+            try: 
+                npz = generate_npz()
+                return Response(
                 response = generate_npz(),
                 mimetype = mime,
                 status = 200,
@@ -544,6 +545,21 @@ class PredictionExport(Resource):
                     "Content-Disposition": 'attachment; filename="export."' + req_format
                 }
             )
+                
+            except NoValid: 
+                return {
+                    "status": 400,
+                    "error": "Can only return npz if predictions are validated. Currently there are no valid predictions"
+                }, 400
+
+            return Response(
+                response = generate_npz(),
+                mimetype = mime,
+                status = 200,
+                headers = {
+                    "Content-Disposition": 'attachment; filename="export."' + req_format
+                })
+        
         else:
             return Response(
                 generate(),
