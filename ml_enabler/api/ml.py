@@ -414,7 +414,6 @@ class PredictionExport(Resource):
                     continue
 
                 if row[4]:
-
                     #inference types ordered
                     i_lst = pred.inf_list.split(",")
 
@@ -439,7 +438,6 @@ class PredictionExport(Resource):
                             else:
                                 l = [1, 0]
                             labels_dict.update({t:l})
-                        print(labels_dict)
 
                     else:
                         # works for multi-class
@@ -451,12 +449,12 @@ class PredictionExport(Resource):
                                 print('validated and true')
                                 labels_dict.update({t:l})
                             else:
+                                print('validated and false, flipping binary label value at index')
                                 if l[i] == 0:
                                     l[i] = 1
                                 else:
                                     l[i] = 0
                         labels_dict.update({t:l})
-                        print(labels_dict)
             bytestream = io.BytesIO()
             np.savez(bytestream, **labels_dict)
             return bytestream.getvalue()
