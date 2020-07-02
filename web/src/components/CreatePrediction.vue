@@ -37,13 +37,16 @@
                         </div>
                     </template>
                     <template v-if='prediction.infList.split(",").length === 2'>
-                        <div class='col col--4'></div>
+                        <div class='col col--4'>
+                            <label class='checkbox-container px6'>
+                                Binary Inference:
+                                <input type='checkbox' />
+                                <div class='checkbox mx6'>
+                                    <svg class='icon'><use xlink:href='#icon-check' /></svg>
+                                </div>
+                            </label>
+                        </div>
                         <div class='col col--8'>
-                            <input type='checkbox' />
-                            <div class='checkbox mr6'>
-                            <svg class='icon'><use xlink:href='#icon-check' /></svg>
-                            </div>
-                            Binary Inference:
                         </div>
 
                     </template>
@@ -73,7 +76,7 @@ export default {
                 version: '',
                 tileZoom: '18',
                 bbox: [-180.0, -90.0, 180.0, 90.0],
-                infList: [],
+                infList: '',
                 infType: 'classification',
                 infBinary: false
             }
