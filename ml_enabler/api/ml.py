@@ -407,13 +407,9 @@ class PredictionExport(Resource):
             for row in stream:
                 if req_inferences != 'all' and row[3].get(req_inferences) is None:
                     continue
-
                 if req_inferences != 'all' and row[3].get(req_inferences) <= req_threshold:
                     continue
                 if row[4]:
-                    print(row[4])
-                    #handle if nothing is validated 
-                    #inference types ordered
                     i_lst = pred.inf_list.split(",")
 
                     #convert raw predictions into 0 or 1 based on threshold
@@ -423,20 +419,12 @@ class PredictionExport(Resource):
                     #convert quadkey to x-y-z
                     t = '-'.join([str(i) for i in mercantile.quadkey_to_tile(row[1])])
 
-                    # special case for binary (checking len doesn't necessarily work)
-                    # could we add something so the user specifies it's a binary classification ml type?
-                    # to avoid having [0,0]
-                    # in db add column for binary model (boolean), checkbox in UI 
-                    #add inf_binary 
-                    # add error if inf_binary is set to true and inf_lst is not two, split inf_lst, map and trim to avoid space
-                    
+                    # special case for binary                
                     if (pred.inf_binary) and (len(i_lst) != 2): 
-                        # need to actually raise error, 4xx because it's a user error
                             return {
                             "status": 400,
                             "error": "binary models must have two catagories"
-                            }, 400
-                    
+                            }, 400             
                     if (len(i_lst) == 2) and (pred.inf_binary): 
                         if list(row[4].values())[0]: #validated and true, keep original
                             labels_dict.update({t:l})
@@ -446,9 +434,8 @@ class PredictionExport(Resource):
                             else:
                                 l = [1, 0]
                             labels_dict.update({t:l})
-
                     else:
-                        # works for multi-label
+                        # for multi-label
                         for key in list(row[4].keys()):
                             i = i_lst.index(key)
                             if not row[4][key]:
@@ -457,9 +444,6 @@ class PredictionExport(Resource):
                                 else:
                                     l[i] = 0
                         labels_dict.update({t:l})
-                # else: 
-                #     raise  NoValid 
-
             if not labels_dict: 
                 raise NoValid
 
@@ -488,11 +472,6 @@ class PredictionExport(Resource):
                 if req_format == "geojson" or req_format == "geojsonld":
                     properties_dict = {}
                     valid_dict = {}
-                    # if list(row[4])[0]:
-                    #     valid_dict['valid'] = True
-                    # else:
-                    #     valid_dict['valid'] = False
-
                     properties_dict = row[3].update(valid_dict)
                     feat = {
                         "id": row[0],
@@ -501,7 +480,6 @@ class PredictionExport(Resource):
                         "properties": properties_dict,
                         "geometry": json.loads(row[2])
                     }
-
                     if req_format == "geojsonld":
                         yield json.dumps(feat) + '\n'
                     elif req_format == "geojson":
@@ -517,14 +495,11 @@ class PredictionExport(Resource):
                         rowdata.append(row[3].get(inf, 0.0))
                     csv.writer(output, quoting=csv.QUOTE_NONNUMERIC).writerow(rowdata)
                     yield output.getvalue()
-
                 else:
                     return {"status": 501, "error": "not a valid export type, valid export types are: geojson, csv, and npz"}, 501
 
             if req_format == "geojson":
                 yield ']}'
-
-
 
         if req_format == "csv":
             mime = "text/csv"
@@ -544,22 +519,19 @@ class PredictionExport(Resource):
                 headers = {
                     "Content-Disposition": 'attachment; filename="export."' + req_format
                 }
-            )
-                
+            )        
             except NoValid: 
                 return {
                     "status": 400,
                     "error": "Can only return npz if predictions are validated. Currently there are no valid predictions"
                 }, 400
-
             return Response(
                 response = generate_npz(),
                 mimetype = mime,
                 status = 200,
                 headers = {
                     "Content-Disposition": 'attachment; filename="export."' + req_format
-                })
-        
+                })      
         else:
             return Response(
                 generate(),
