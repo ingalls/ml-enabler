@@ -40,7 +40,7 @@
                         <div class='col col--4'>
                             <label class='checkbox-container px6'>
                                 Binary Inference:
-                                <input type='checkbox' />
+                                <input v-model='prediction.infBinary' type='checkbox' />
                                 <div class='checkbox mx6'>
                                     <svg class='icon'><use xlink:href='#icon-check' /></svg>
                                 </div>
@@ -81,6 +81,13 @@ export default {
                 infBinary: false
             }
         };
+    },
+    watch: {
+        'prediction.infList': function() {
+            if (this.prediction.infList.split(",").length !== 2) {
+                this.prediction.infBinary = false;
+            }
+        }
     },
     methods: {
         close: function() {
