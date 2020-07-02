@@ -36,6 +36,17 @@
                             <input v-model='prediction.infList' type='text' class='input' placeholder='buildings,schools,roads,...'/>
                         </div>
                     </template>
+                    <template v-if='prediction.infList.split(",").length === 2'>
+                        <div class='col col--4'></div>
+                        <div class='col col--8'>
+                            <input type='checkbox' />
+                            <div class='checkbox mr6'>
+                            <svg class='icon'><use xlink:href='#icon-check' /></svg>
+                            </div>
+                            Binary Inference:
+                        </div>
+
+                    </template>
                     <div class='col col--12 py12'>
                         <button @click='postPrediction' class='btn btn--stroke round fr color-green-light color-green-on-hover'>Add Prediction</button>
                     </div>
