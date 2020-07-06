@@ -379,9 +379,7 @@ export default {
                             Value: tag.Value
                         };
                     }),
-                    type: this.prediction.infType,
                     imagery: this.params.image.url,
-                    inferences: this.prediction.infList,
                     maxSize: this.params.maxSize,
                     maxConcurrency: this.params.maxConcurrency
                 })

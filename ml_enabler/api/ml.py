@@ -814,11 +814,15 @@ class PredictionStackAPI(Resource):
                 "error": "imagery key required in body"
             }, 400
 
-        if payload.get("inferences") is None:
-            return {
-                "status": 400,
-                "error": "inferences key required in body"
-            }, 400
+        pred = PredictionService.get_prediction_by_id(prediction_id) 
+
+
+        # if payload.get("inferences") is None:
+        #     return {
+        #         "status": 400,
+        #         "error": "inferences key required in body"
+        #     }, 400
+
 
         image = "models-{model}-prediction-{prediction}".format(
             model=model_id,
@@ -850,7 +854,7 @@ class PredictionStackAPI(Resource):
                     'ParameterValue': image,
                 },{
                     'ParameterKey': 'Inferences',
-                    'ParameterValue': payload["inferences"],
+                    'ParameterValue': pred.inf_list,
                 },{
                     'ParameterKey': 'PredictionId',
                     'ParameterValue': str(prediction_id)
