@@ -388,7 +388,7 @@ class PredictionExport(Resource):
     def get(self, model_id, prediction_id):
         req_format = request.args.get('format', 'geojson')
         req_inferences = request.args.get('inferences', 'all')
-        req_threshold = request.args.get('threshold', '0.5')
+        req_threshold = request.args.get('threshold', '0')
 
         req_threshold = float(req_threshold)
         stream = PredictionService.export(prediction_id)
@@ -524,14 +524,7 @@ class PredictionExport(Resource):
                 return {
                     "status": 400,
                     "error": "Can only return npz if predictions are validated. Currently there are no valid predictions"
-                }, 400
-            return Response(
-                response = generate_npz(),
-                mimetype = mime,
-                status = 200,
-                headers = {
-                    "Content-Disposition": 'attachment; filename="export."' + req_format
-                })      
+                }, 400     
         else:
             return Response(
                 generate(),
