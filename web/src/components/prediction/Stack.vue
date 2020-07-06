@@ -379,7 +379,7 @@ export default {
                             Value: tag.Value
                         };
                     }),
-                    type: this.predcition.infType,
+                    type: this.prediction.infType,
                     imagery: this.params.image.url,
                     inferences: this.prediction.infList,
                     maxSize: this.params.maxSize,
