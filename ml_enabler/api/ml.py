@@ -522,7 +522,7 @@ class PredictionExport(Resource):
                 mimetype = mime,
                 status = 200,
                 headers = {
-                    "Content-Disposition": 'attachment; filename="export."' + req_format
+                    "Content-Disposition": 'attachment; filename="export.' + req_format + '"'
                 }
             )        
             except NoValid: 
@@ -536,7 +536,7 @@ class PredictionExport(Resource):
                 mimetype = mime,
                 status = 200,
                 headers = {
-                    "Content-Disposition": 'attachment; filename="export."' + req_format
+                    "Content-Disposition": 'attachment; filename="export.' + req_format + '"'
                 }
             )
 
