@@ -471,8 +471,13 @@ class PredictionExport(Resource):
 
                 if req_format == "geojson" or req_format == "geojsonld":
                     properties_dict = {}
-                    valid_dict = {}
-                    properties_dict = row[3].update(valid_dict)
+                    if row[4]: 
+                        properties_dict = row[3]
+                        valid_dict = {}
+                        valid_dict.update({'validity': row[4]})
+                        properties_dict.update(valid_dict)
+                    else: 
+                        properties_dict = row[3]
                     feat = {
                         "id": row[0],
                         "quadkey": row[1],
@@ -490,7 +495,7 @@ class PredictionExport(Resource):
                             yield ',\n' + json.dumps(feat)
                 elif req_format == "csv":
                     output = io.StringIO()
-                    rowdata = [ row[0], row[1], row[2] ]
+                    rowdata = [ row[0], row[1], row[2]]
                     for inf in inferences:
                         rowdata.append(row[3].get(inf, 0.0))
                     csv.writer(output, quoting=csv.QUOTE_NONNUMERIC).writerow(rowdata)
