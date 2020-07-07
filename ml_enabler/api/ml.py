@@ -815,15 +815,6 @@ class PredictionStackAPI(Resource):
             }, 400
 
         pred = PredictionService.get_prediction_by_id(prediction_id) 
-
-
-        # if payload.get("inferences") is None:
-        #     return {
-        #         "status": 400,
-        #         "error": "inferences key required in body"
-        #     }, 400
-
-
         image = "models-{model}-prediction-{prediction}".format(
             model=model_id,
             prediction=prediction_id
