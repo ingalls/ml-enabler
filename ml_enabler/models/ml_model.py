@@ -248,7 +248,8 @@ class Prediction(db.Model):
     save_link = db.Column(db.String)
     inf_list = db.Column(db.String)
     inf_type = db.Column(db.String)
-    inf_binary = db.Column(db.Boolean) #should this be String? 
+    inf_binary = db.Column(db.Boolean)
+    inf_supertile = db.Column(db.Boolean)
 
     def create(self, prediction_dto: PredictionDTO):
         """ Creates and saves the current model to the DB """
@@ -261,6 +262,7 @@ class Prediction(db.Model):
         self.inf_list = prediction_dto.inf_list
         self.inf_type = prediction_dto.inf_type
         self.inf_binary = prediction_dto.inf_binary
+        self.inf_supertile = prediction_dto.inf_supertile
 
         db.session.add(self)
         db.session.commit()
@@ -309,7 +311,8 @@ class Prediction(db.Model):
             Prediction.version_id,
             Prediction.inf_list,
             Prediction.inf_type, 
-            Prediction.inf_binary
+            Prediction.inf_binary,
+            Prediction.inf_supertile
         ).filter(Prediction.id == prediction_id)
 
         return Prediction.query.get(prediction_id)
@@ -335,7 +338,8 @@ class Prediction(db.Model):
             Prediction.save_link,
             Prediction.inf_list,
             Prediction.inf_type, 
-            Prediction.inf_binary
+            Prediction.inf_binary,
+            Prediction.inf_supertile
         ).filter(Prediction.model_id == model_id)
 
         return query.all()
@@ -404,6 +408,7 @@ class Prediction(db.Model):
         prediction_dto.inf_list = prediction[11]
         prediction_dto.inf_type = prediction[12]
         prediction_dto.inf_binary = prediction[13]
+        prediction_dto.inf_supertile = prediction[14]
 
         return prediction_dto
 
