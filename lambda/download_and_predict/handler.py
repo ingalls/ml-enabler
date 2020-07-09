@@ -12,6 +12,8 @@ def handler(event: SQSEvent, context: Dict[str, Any]) -> bool:
     prediction_id = os.getenv('PREDICTION_ID')
     prediction_endpoint = os.getenv('PREDICTION_ENDPOINT')
     mlenabler_endpoint = os.getenv('MLENABLER_ENDPOINT')
+    super_tile = os.getenv('INF_SUPERTILE')
+    tile_zoom = os.getenv('TILE_ZOOM')
 
     assert(imagery)
     assert(prediction_id)
@@ -25,8 +27,12 @@ def handler(event: SQSEvent, context: Dict[str, Any]) -> bool:
         prediction_endpoint=prediction_endpoint
     )
 
+
+    if super_tile: #fix, get from database 
+        tiles = dap.get_supertiles(event)
+    else: 
     # get tiles from our SQS event
-    tiles = dap.get_tiles(event)
+        tiles = dap.get_tiles(event)
 
     # Get meta about model to determine model type (Classification vs Object Detection)
     model_type = dap.get_meta()

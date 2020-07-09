@@ -14,9 +14,11 @@ from io import BytesIO
 from base64 import b64encode
 from urllib.parse import urlparse
 from typing import Dict, List, NamedTuple, Callable, Optional, Tuple, Any, Iterator
+from rasterio.io import MemoryFile
+from rasterio.windows import Window
 
 import mercantile
-from mercantile import Tile
+from mercantile import Tile, children
 import requests
 import numpy as np
 
@@ -70,19 +72,38 @@ class DownloadAndPredict(object):
           for record
           in event['Records']
         ]
-
-
     @staticmethod
     def b64encode_image(image_binary:bytes) -> str:
         return b64encode(image_binary).decode('utf-8')
 
-
+    @staticmethod
     def get_images(self, tiles: List[Tile]) -> Iterator[Tuple[Tile, bytes]]:
         for tile in tiles:
             url = self.imagery.format(x=tile.x, y=tile.y, z=tile.z)
             print("IMAGE: " + url)
             r = requests.get(url)
             yield (tile, r.content)
+            
+    @staticmethod
+    def get_supertiles(self, tiles: List[Tile]) -> Iterator[Tuple[Tile, bytes]]): 
+        """return images cropped to a given model_image_size from an imagery endpoint"""
+        for tile in tiles:
+            url = self.imagery.format(x=tile.x, y=tile.y, z=tile.z)
+            r = requests.get(url)
+            with MemoryFile(BytesIO(r.content)) as memfile:
+                with memfile.open() as dataset:
+                    # because of the tile indexing, we assume all tiles are square
+
+                    tile_indices = children(tile, zoom=1 + tile.z) #get this from database (tile_zoom)
+                    tile_indices.sort()
+
+                    for i in range (2):
+                        for j in range(2):
+                            window = Window(i * 256, j * 256, 256, 256)
+                            yield (
+                              tile_indices[i + j],
+                              dataset.read(window=window)
+                             )
 
 
     def get_prediction_payload(self, tiles:List[Tile], model_type: ModelType) -> Tuple[List[Tile], Dict[str, Any]]:
