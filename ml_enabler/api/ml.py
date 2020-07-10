@@ -858,7 +858,15 @@ class PredictionStackAPI(Resource):
                 },{
                     'ParameterKey': 'MaxConcurrency',
                     'ParameterValue': payload.get("maxConcurrency", "50"),
+                },{
+                    'ParameterKey': 'InfSupertile', 
+                    'ParameterValue': payload.get("infSupertile"),
+
+                },{'ParameterKey': 'TileZoom', 
+                   'ParameterValue': payload.get("tileZoom"),
+
                 }],
+
                 Capabilities=[
                     'CAPABILITY_NAMED_IAM'
                 ],
