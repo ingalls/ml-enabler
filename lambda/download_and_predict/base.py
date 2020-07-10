@@ -6,6 +6,8 @@ to a remote ML serving image, and saving them
 import json
 import affine
 import geojson
+import requests
+
 from shapely import affinity, geometry
 from enum import Enum
 from functools import reduce
@@ -18,7 +20,6 @@ from rasterio.windows import Window
 
 import mercantile
 from mercantile import Tile, children
-import requests
 import numpy as np
 
 from download_and_predict.custom_types import SQSEvent
@@ -76,7 +77,6 @@ class DownloadAndPredict(object):
     def b64encode_image(image_binary:bytes) -> str:
         return b64encode(image_binary).decode('utf-8')
 
-    @staticmethod
     def get_images(self, tiles: List[Tile]) -> Iterator[Tuple[Tile, bytes]]:
         for tile in tiles:
             url = self.imagery.format(x=tile.x, y=tile.y, z=tile.z)
@@ -84,7 +84,6 @@ class DownloadAndPredict(object):
             r = requests.get(url)
             yield (tile, r.content)
             
-    @staticmethod
     def get_supertiles_images(self, tiles: List[Tile]) -> Iterator[Tuple[Tile, bytes]]:
         """return images cropped to a given model_image_size from an imagery endpoint"""
         for tile in tiles:
@@ -105,19 +104,17 @@ class DownloadAndPredict(object):
                               dataset.read(window=window)
                              )
 
-
     def get_prediction_payload(self, tiles:List[Tile], model_type: ModelType) -> Tuple[List[Tile], Dict[str, Any]]:
         """
         tiles: list mercantile Tiles
         imagery: str an imagery API endpoint with three variables {z}/{x}/{y} to replace
-
         Return:
         - an array of b64 encoded images to send to our prediction endpoint
         - a corresponding array of tile indices
-
         These arrays are returned together because they are parallel operations: we
         need to match up the tile indicies with their corresponding images
         """
+
         tiles_and_images = self.get_images(tiles)
         tile_indices, images = zip(*tiles_and_images)
 
@@ -163,6 +160,7 @@ class DownloadAndPredict(object):
     def cl_post_prediction(self, payload: Dict[str, Any], tiles: List[Tile], prediction_id: str, inferences: List[str]) -> Dict[str, Any]:
         payload = json.dumps(payload)
         r = requests.post(self.prediction_endpoint + ":predict", data=payload)
+        print(r)
         r.raise_for_status()
 
         preds = r.json()["predictions"]
