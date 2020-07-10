@@ -40,7 +40,7 @@
             "Description": "Tile Zoom Level"
         },
         "InfSupertile": {
-            "Type": "Boolean", 
+            "Type": "String", 
             "Description": "Model was trained and should inference on supertiles"
         }
     },
