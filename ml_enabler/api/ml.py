@@ -860,10 +860,10 @@ class PredictionStackAPI(Resource):
                     'ParameterValue': payload.get("maxConcurrency", "50"),
                 },{
                     'ParameterKey': 'InfSupertile', 
-                    'ParameterValue': payload.get("infSupertile"),
+                    'ParameterValue': pred.inf_supertile,
 
                 },{'ParameterKey': 'TileZoom', 
-                   'ParameterValue': payload.get("tileZoom"),
+                   'ParameterValue': pred.tile_zoom,
 
                 }],
 
@@ -1138,7 +1138,8 @@ class PredictionSingleAPI(Resource):
                 "logLink": prediction.log_link,
                 "modelLink": prediction.model_link,
                 "dockerLink": prediction.docker_link,
-                "saveLink": prediction.save_link
+                "saveLink": prediction.save_link, 
+                "infSupertile": prediction.inf_supertile
             }
 
             return pred, 200
