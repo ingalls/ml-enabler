@@ -89,7 +89,8 @@ export default {
                 bbox: [-180.0, -90.0, 180.0, 90.0],
                 infList: '',
                 infType: 'classification',
-                infBinary: false
+                infBinary: false, 
+                infSupertile: false
             }
         };
     },
