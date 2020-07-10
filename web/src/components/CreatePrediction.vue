@@ -58,9 +58,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class='col col--8'>
-                    </div>
-                    </template>
+                    <div class='col col--8'></div>
                     <div class='col col--12 py12'>
                         <button @click='postPrediction' class='btn btn--stroke round fr color-green-light color-green-on-hover'>Add Prediction</button>
                     </div>
