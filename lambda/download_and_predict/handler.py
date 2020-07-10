@@ -15,6 +15,7 @@ def handler(event: SQSEvent, context: Dict[str, Any]) -> bool:
     super_tile = os.getenv('INF_SUPERTILE')
     tile_zoom = os.getenv('TILE_ZOOM')
 
+
     assert(imagery)
     assert(prediction_id)
     assert(prediction_endpoint)
@@ -28,7 +29,8 @@ def handler(event: SQSEvent, context: Dict[str, Any]) -> bool:
     )
 
 
-    if super_tile: #fix, get from database 
+    print(super_tile)
+    if super_tile == 'True': 
         tiles = dap.get_supertiles(event)
     else: 
     # get tiles from our SQS event

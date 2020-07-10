@@ -860,10 +860,10 @@ class PredictionStackAPI(Resource):
                     'ParameterValue': payload.get("maxConcurrency", "50"),
                 },{
                     'ParameterKey': 'InfSupertile', 
-                    'ParameterValue': pred.inf_supertile,
+                    'ParameterValue': str(pred.inf_supertile),
 
                 },{'ParameterKey': 'TileZoom', 
-                   'ParameterValue': pred.tile_zoom,
+                   'ParameterValue': str(pred.tile_zoom),
 
                 }],
 
