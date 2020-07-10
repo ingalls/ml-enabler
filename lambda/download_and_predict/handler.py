@@ -28,19 +28,19 @@ def handler(event: SQSEvent, context: Dict[str, Any]) -> bool:
         prediction_endpoint=prediction_endpoint
     )
 
-
-    print(super_tile)
-    if super_tile == 'True': 
-        tiles = dap.get_supertiles(event)
-    else: 
     # get tiles from our SQS event
-        tiles = dap.get_tiles(event)
+    tiles = dap.get_tiles(event)
 
     # Get meta about model to determine model type (Classification vs Object Detection)
     model_type = dap.get_meta()
 
     # construct a payload for our prediction endpoint
-    tile_indices, payload = dap.get_prediction_payload(tiles, model_type)
+
+    if super_tile == 'True': 
+         tile_indices, payload = dap.get_prediction_payload(tiles, model_type)
+
+    else: 
+        tile_indices, payload = dap.get_prediction_payload_supertiles(tiles, model_type)
 
     if model_type == ModelType.OBJECT_DETECT:
         print("TYPE: Object Detection")

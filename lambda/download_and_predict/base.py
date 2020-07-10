@@ -3,7 +3,6 @@ Lambda for downloading images, packaging them for prediction, sending them
 to a remote ML serving image, and saving them
 @author:Development Seed
 """
-
 import json
 import affine
 import geojson
@@ -23,6 +22,7 @@ import requests
 import numpy as np
 
 from download_and_predict.custom_types import SQSEvent
+
 
 class ModelType(Enum):
     OBJECT_DETECT = 1
@@ -85,7 +85,7 @@ class DownloadAndPredict(object):
             yield (tile, r.content)
             
     @staticmethod
-    def get_supertiles(self, tiles: List[Tile]) -> Iterator[Tuple[Tile, bytes]]): 
+    def get_supertiles_images(self, tiles: List[Tile]) -> Iterator[Tuple[Tile, bytes]]:
         """return images cropped to a given model_image_size from an imagery endpoint"""
         for tile in tiles:
             url = self.imagery.format(x=tile.x, y=tile.y, z=tile.z)
@@ -119,6 +119,33 @@ class DownloadAndPredict(object):
         need to match up the tile indicies with their corresponding images
         """
         tiles_and_images = self.get_images(tiles)
+        tile_indices, images = zip(*tiles_and_images)
+
+        instances = []
+        if model_type == ModelType.CLASSIFICATION:
+            instances = [dict(image_bytes=dict(b64=self.b64encode_image(img))) for img in images]
+        else:
+            instances = [dict(inputs=dict(b64=self.b64encode_image(img))) for img in images]
+
+        payload = {
+            "instances": instances
+        }
+
+        return (list(tile_indices), payload)
+
+    def get_prediction_payload_supertiles(self, tiles:List[Tile], model_type: ModelType) -> Tuple[List[Tile], Dict[str, Any]]:
+        """
+        tiles: list mercantile Tiles
+        imagery: str an imagery API endpoint with three variables {z}/{x}/{y} to replace
+
+        Return:
+        - an array of b64 encoded images to send to our prediction endpoint
+        - a corresponding array of tile indices
+
+        These arrays are returned together because they are parallel operations: we
+        need to match up the tile indicies with their corresponding images
+        """
+        tiles_and_images = self.get_supertiles_images(tiles)
         tile_indices, images = zip(*tiles_and_images)
 
         instances = []
