@@ -87,6 +87,7 @@ class DownloadAndPredict(object):
     def get_supertiles_images(self, tiles: List[Tile]) -> Iterator[Tuple[Tile, bytes]]:
         """return images cropped to a given model_image_size from an imagery endpoint"""
         for tile in tiles:
+            print(tile)
             url = self.imagery.format(x=tile.x, y=tile.y, z=tile.z)
             r = requests.get(url)
             with MemoryFile(BytesIO(r.content)) as memfile:
@@ -95,6 +96,7 @@ class DownloadAndPredict(object):
 
                     tile_indices = children(tile, zoom=1 + tile.z) #get this from database (tile_zoom)
                     tile_indices.sort()
+                    print(tile_indices)
 
                     for i in range (2):
                         for j in range(2):
@@ -160,6 +162,8 @@ class DownloadAndPredict(object):
     def cl_post_prediction(self, payload: Dict[str, Any], tiles: List[Tile], prediction_id: str, inferences: List[str]) -> Dict[str, Any]:
         payload = json.dumps(payload)
         r = requests.post(self.prediction_endpoint + ":predict", data=payload)
+        print(self.prediction_endpoint)
+        print(r.content)
         print(r)
         r.raise_for_status()
 
