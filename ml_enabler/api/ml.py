@@ -862,9 +862,6 @@ class PredictionStackAPI(Resource):
                     'ParameterKey': 'InfSupertile', 
                     'ParameterValue': str(pred.inf_supertile),
 
-                },{'ParameterKey': 'TileZoom', 
-                   'ParameterValue': str(pred.tile_zoom),
-
                 }],
 
                 Capabilities=[

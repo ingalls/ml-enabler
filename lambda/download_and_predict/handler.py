@@ -13,8 +13,6 @@ def handler(event: SQSEvent, context: Dict[str, Any]) -> bool:
     mlenabler_endpoint = os.getenv('MLENABLER_ENDPOINT')
     super_tile = os.getenv('INF_SUPERTILE')
     print(super_tile)
-    tile_zoom = os.getenv('TILE_ZOOM')
-
 
     assert(imagery)
     assert(prediction_id)
