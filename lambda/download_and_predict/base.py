@@ -7,6 +7,7 @@ import json
 import affine
 import geojson
 import requests
+import rasterio
 
 from shapely import affinity, geometry
 from enum import Enum
@@ -17,6 +18,8 @@ from urllib.parse import urlparse
 from typing import Dict, List, NamedTuple, Callable, Optional, Tuple, Any, Iterator
 from rasterio.io import MemoryFile
 from rasterio.windows import Window
+from PIL import Image
+import io
 
 import mercantile
 from mercantile import Tile, children
@@ -83,28 +86,6 @@ class DownloadAndPredict(object):
             print("IMAGE: " + url)
             r = requests.get(url)
             yield (tile, r.content)
-            
-    # def get_supertiles_images(self, tiles: List[Tile]) -> Iterator[Tuple[Tile, bytes]]:
-    #     """return images cropped to a given model_image_size from an imagery endpoint"""
-    #     for tile in tiles:
-    #         print(tile)
-    #         url = self.imagery.format(x=tile.x, y=tile.y, z=tile.z)
-    #         r = requests.get(url)
-    #         with MemoryFile(BytesIO(r.content)) as memfile:
-    #             with memfile.open() as dataset:
-    #                 # because of the tile indexing, we assume all tiles are square
-
-    #                 tile_indices = children(tile, zoom=1 + tile.z) #get this from database (tile_zoom)
-    #                 tile_indices.sort()
-    #                 print(tile_indices)
-
-    #                 for i in range (2):
-    #                     for j in range(2):
-    #                         window = Window(i * 256, j * 256, 256, 256)
-    #                         yield (
-    #                           tile_indices[i + j],
-    #                           dataset.read(window=window)
-    #                          )
 
     def get_prediction_payload(self, tiles:List[Tile], model_type: ModelType) -> Tuple[List[Tile], Dict[str, Any]]:
         """
@@ -122,8 +103,6 @@ class DownloadAndPredict(object):
         print('get_prediction_payload tile indicies:')
         print(tile_indices)
         print('get_prediction_payload tile images:')
-        for img in images: 
-            print(img.shape)
 
         instances = []
         if model_type == ModelType.CLASSIFICATION:
@@ -136,33 +115,6 @@ class DownloadAndPredict(object):
         }
 
         return (list(tile_indices), payload)
-
-    # def get_prediction_payload_supertiles(self, tiles:List[Tile], model_type: ModelType) -> Tuple[List[Tile], Dict[str, Any]]:
-    #     """
-    #     tiles: list mercantile Tiles
-    #     imagery: str an imagery API endpoint with three variables {z}/{x}/{y} to replace
-
-    #     Return:
-    #     - an array of b64 encoded images to send to our prediction endpoint
-    #     - a corresponding array of tile indices
-
-    #     These arrays are returned together because they are parallel operations: we
-    #     need to match up the tile indicies with their corresponding images
-    #     """
-    #     tiles_and_images = self.get_supertiles_images(tiles)
-    #     tile_indices, images = zip(*tiles_and_images)
-
-    #     instances = []
-    #     if model_type == ModelType.CLASSIFICATION:
-    #         instances = [dict(image_bytes=dict(b64=self.b64encode_image(img))) for img in images]
-    #     else:
-    #         instances = [dict(inputs=dict(b64=self.b64encode_image(img))) for img in images]
-
-    #     payload = {
-    #         "instances": instances
-    #     }
-
-    #     return (list(tile_indices), payload)
 
     def cl_post_prediction(self, payload: Dict[str, Any], tiles: List[Tile], prediction_id: str, inferences: List[str]) -> Dict[str, Any]:
         payload = json.dumps(payload)
@@ -275,27 +227,41 @@ class SuperTileDownloader(DownloadAndPredict):
         self.prediction_endpoint = prediction_endpoint
 
     def get_images(self, tiles: List[Tile]) -> Iterator[Tuple[Tile, bytes]]:
-        """return images cropped to a given model_image_size from an imagery endpoint"""
+        """return bounds of original tile filled with the 4 child tiles 1 zoom level up in bytes"""
         for tile in tiles:
             print('in SuperTileDownloader get images function')
             print(tile)
-            url = self.imagery.format(x=tile.x, y=tile.y, z=tile.z)
-            r = requests.get(url)
-            with MemoryFile(BytesIO(r.content)) as memfile:
-                with memfile.open() as dataset:
-                    # because of the tile indexing, we assume all tiles are square
-                    z = 1 + tile.z 
-                    print(z)
-                    tile_indices = children(tile, zoom=z) #get this from database (tile_zoom)
-                    tile_indices.sort()
-                    print('in SupertilesDownlaoder tile indicies')
-                    print(tile_indices)
+            w_lst = []
+            for i in range(2):
+                for j in range(2):
+                    window = Window(i * 256, j * 256, 256, 256)
+                    w_lst.append(window)
+            z = 1 + tile.z 
+            child_tiles = children(tile, zoom=z) #get this from database (tile_zoom)
+            child_tiles.sort()
+            print('in supertile get_images')
+            print(child_tiles)
 
-                    for i in range (2):
-                        for j in range(2):
-                            window = Window(i * 256, j * 256, 256, 256)
-                            yield (
-                                tile_indices[i + j],
-                                dataset.read(window=window)
-                                )
+            with MemoryFile() as memfile:
+                with memfile.open(driver='jpeg', height=512, width=512, count=3, dtype=rasterio.uint8) as dataset:
+                    for num, t in enumerate(child_tiles):
+                        print(num)
+                        print(t)
+                        url = self.imagery.format(x=t.x, y=t.y, z=t.z)
+                        print(url)
+                        r = requests.get(url)
+                        img = np.array(Image.open(io.BytesIO(r.content)), dtype=np.uint8)
+                        try:
+                            img = img.reshape((256, 256, 3)) # 4 channels returned from some endpoints, but not all
+                        except ValueError:
+                            img = img.reshape((256, 256, 4))
+                        img = img[:, :, :3]
+                        img = np.rollaxis(img, 2, 0)
+                        print(w_lst[num])
+                        print()
+                        dataset.write(img, window=w_lst[num])
+                dataset_b = memfile.read() #but this fails
+                yield( 
+                    tile,
+                    dataset_b)
 
