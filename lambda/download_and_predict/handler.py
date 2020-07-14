@@ -2,7 +2,7 @@
 
 import os
 from typing import Dict, Any
-from download_and_predict.base import DownloadAndPredict, ModelType
+from download_and_predict.base import DownloadAndPredict, ModelType, SuperTileDownloader
 from download_and_predict.custom_types import SQSEvent
 
 def handler(event: SQSEvent, context: Dict[str, Any]) -> bool:
@@ -35,8 +35,11 @@ def handler(event: SQSEvent, context: Dict[str, Any]) -> bool:
     # construct a payload for our prediction endpoint
 
     if super_tile == 'True': 
+
+        dap = SuperTileDownloader(imagery=imagery, mlenabler_endpoint=mlenabler_endpoint, prediction_endpoint=prediction_endpoint)
         print('is supertile')
-        tile_indices, payload = dap.get_prediction_payload_supertiles(tiles, model_type)
+        tile_indices, payload = dap.get_prediction_payload(tiles, model_type)
+
     else: 
         tile_indices, payload = dap.get_prediction_payload(tiles, model_type)
 

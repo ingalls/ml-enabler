@@ -84,27 +84,27 @@ class DownloadAndPredict(object):
             r = requests.get(url)
             yield (tile, r.content)
             
-    def get_supertiles_images(self, tiles: List[Tile]) -> Iterator[Tuple[Tile, bytes]]:
-        """return images cropped to a given model_image_size from an imagery endpoint"""
-        for tile in tiles:
-            print(tile)
-            url = self.imagery.format(x=tile.x, y=tile.y, z=tile.z)
-            r = requests.get(url)
-            with MemoryFile(BytesIO(r.content)) as memfile:
-                with memfile.open() as dataset:
-                    # because of the tile indexing, we assume all tiles are square
+    # def get_supertiles_images(self, tiles: List[Tile]) -> Iterator[Tuple[Tile, bytes]]:
+    #     """return images cropped to a given model_image_size from an imagery endpoint"""
+    #     for tile in tiles:
+    #         print(tile)
+    #         url = self.imagery.format(x=tile.x, y=tile.y, z=tile.z)
+    #         r = requests.get(url)
+    #         with MemoryFile(BytesIO(r.content)) as memfile:
+    #             with memfile.open() as dataset:
+    #                 # because of the tile indexing, we assume all tiles are square
 
-                    tile_indices = children(tile, zoom=1 + tile.z) #get this from database (tile_zoom)
-                    tile_indices.sort()
-                    print(tile_indices)
+    #                 tile_indices = children(tile, zoom=1 + tile.z) #get this from database (tile_zoom)
+    #                 tile_indices.sort()
+    #                 print(tile_indices)
 
-                    for i in range (2):
-                        for j in range(2):
-                            window = Window(i * 256, j * 256, 256, 256)
-                            yield (
-                              tile_indices[i + j],
-                              dataset.read(window=window)
-                             )
+    #                 for i in range (2):
+    #                     for j in range(2):
+    #                         window = Window(i * 256, j * 256, 256, 256)
+    #                         yield (
+    #                           tile_indices[i + j],
+    #                           dataset.read(window=window)
+    #                          )
 
     def get_prediction_payload(self, tiles:List[Tile], model_type: ModelType) -> Tuple[List[Tile], Dict[str, Any]]:
         """
@@ -119,6 +119,11 @@ class DownloadAndPredict(object):
 
         tiles_and_images = self.get_images(tiles)
         tile_indices, images = zip(*tiles_and_images)
+        print('get_prediction_payload tile indicies:')
+        print(tile_indices)
+        print('get_prediction_payload tile images:')
+        for img in images: 
+            print(img.shape)
 
         instances = []
         if model_type == ModelType.CLASSIFICATION:
@@ -132,35 +137,39 @@ class DownloadAndPredict(object):
 
         return (list(tile_indices), payload)
 
-    def get_prediction_payload_supertiles(self, tiles:List[Tile], model_type: ModelType) -> Tuple[List[Tile], Dict[str, Any]]:
-        """
-        tiles: list mercantile Tiles
-        imagery: str an imagery API endpoint with three variables {z}/{x}/{y} to replace
+    # def get_prediction_payload_supertiles(self, tiles:List[Tile], model_type: ModelType) -> Tuple[List[Tile], Dict[str, Any]]:
+    #     """
+    #     tiles: list mercantile Tiles
+    #     imagery: str an imagery API endpoint with three variables {z}/{x}/{y} to replace
 
-        Return:
-        - an array of b64 encoded images to send to our prediction endpoint
-        - a corresponding array of tile indices
+    #     Return:
+    #     - an array of b64 encoded images to send to our prediction endpoint
+    #     - a corresponding array of tile indices
 
-        These arrays are returned together because they are parallel operations: we
-        need to match up the tile indicies with their corresponding images
-        """
-        tiles_and_images = self.get_supertiles_images(tiles)
-        tile_indices, images = zip(*tiles_and_images)
+    #     These arrays are returned together because they are parallel operations: we
+    #     need to match up the tile indicies with their corresponding images
+    #     """
+    #     tiles_and_images = self.get_supertiles_images(tiles)
+    #     tile_indices, images = zip(*tiles_and_images)
 
-        instances = []
-        if model_type == ModelType.CLASSIFICATION:
-            instances = [dict(image_bytes=dict(b64=self.b64encode_image(img))) for img in images]
-        else:
-            instances = [dict(inputs=dict(b64=self.b64encode_image(img))) for img in images]
+    #     instances = []
+    #     if model_type == ModelType.CLASSIFICATION:
+    #         instances = [dict(image_bytes=dict(b64=self.b64encode_image(img))) for img in images]
+    #     else:
+    #         instances = [dict(inputs=dict(b64=self.b64encode_image(img))) for img in images]
 
-        payload = {
-            "instances": instances
-        }
+    #     payload = {
+    #         "instances": instances
+    #     }
 
-        return (list(tile_indices), payload)
+    #     return (list(tile_indices), payload)
 
     def cl_post_prediction(self, payload: Dict[str, Any], tiles: List[Tile], prediction_id: str, inferences: List[str]) -> Dict[str, Any]:
         payload = json.dumps(payload)
+        print('cl_post_predictions_payload:')
+        print(payload)
+        print('cl_post_prediction tiles:')
+        print(tiles)
         r = requests.post(self.prediction_endpoint + ":predict", data=payload)
         print(self.prediction_endpoint)
         print(r.content)
@@ -256,4 +265,37 @@ class DownloadAndPredict(object):
         geographic_bbox = affinity.affine_transform(geometry.box(*pred), a_lst)
 
         return geographic_bbox
+
+class SuperTileDownloader(DownloadAndPredict):
+    def __init__(self, imagery: str, mlenabler_endpoint: str, prediction_endpoint: str):
+    # type annotatation error ignored, re: https://github.com/python/mypy/issues/5887
+        super(DownloadAndPredict, self).__init__()
+        self.imagery = imagery
+        self.mlenabler_endpoint = mlenabler_endpoint
+        self.prediction_endpoint = prediction_endpoint
+
+    def get_images(self, tiles: List[Tile]) -> Iterator[Tuple[Tile, bytes]]:
+        """return images cropped to a given model_image_size from an imagery endpoint"""
+        for tile in tiles:
+            print('in SuperTileDownloader get images function')
+            print(tile)
+            url = self.imagery.format(x=tile.x, y=tile.y, z=tile.z)
+            r = requests.get(url)
+            with MemoryFile(BytesIO(r.content)) as memfile:
+                with memfile.open() as dataset:
+                    # because of the tile indexing, we assume all tiles are square
+                    z = 1 + tile.z 
+                    print(z)
+                    tile_indices = children(tile, zoom=z) #get this from database (tile_zoom)
+                    tile_indices.sort()
+                    print('in SupertilesDownlaoder tile indicies')
+                    print(tile_indices)
+
+                    for i in range (2):
+                        for j in range(2):
+                            window = Window(i * 256, j * 256, 256, 256)
+                            yield (
+                                tile_indices[i + j],
+                                dataset.read(window=window)
+                                )
 
