@@ -91,7 +91,6 @@
                         "StackName": { "Ref": "AWS::StackName" },
                         "INFERENCES": { "Ref": "Inferences" },
                         "INF_SUPERTILE": {"Ref": "InfSupertile"}, 
-                        "TILE_ZOOM": {"Ref": "TileZoom"},
                         "PREDICTION_ID": { "Ref": "PredictionId" },
                         "TILE_ENDPOINT": { "Ref": "TileEndpoint" },
                         "PREDICTION_ENDPOINT": { "Fn::Join": ["", [
