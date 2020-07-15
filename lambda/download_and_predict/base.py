@@ -100,10 +100,6 @@ class DownloadAndPredict(object):
 
         tiles_and_images = self.get_images(tiles)
         tile_indices, images = zip(*tiles_and_images)
-        print('get_prediction_payload tile indicies:')
-        print(tile_indices)
-        print('get_prediction_payload tile images:')
-
         instances = []
         if model_type == ModelType.CLASSIFICATION:
             instances = [dict(image_bytes=dict(b64=self.b64encode_image(img))) for img in images]
@@ -118,14 +114,7 @@ class DownloadAndPredict(object):
 
     def cl_post_prediction(self, payload: Dict[str, Any], tiles: List[Tile], prediction_id: str, inferences: List[str]) -> Dict[str, Any]:
         payload = json.dumps(payload)
-        print('cl_post_predictions_payload:')
-        print(payload)
-        print('cl_post_prediction tiles:')
-        print(tiles)
         r = requests.post(self.prediction_endpoint + ":predict", data=payload)
-        print(self.prediction_endpoint)
-        print(r.content)
-        print(r)
         r.raise_for_status()
 
         preds = r.json()["predictions"]
