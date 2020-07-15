@@ -424,7 +424,7 @@ class Prediction(db.Model):
         prediction_dto.inf_list = prediction[13]
         prediction_dto.inf_type = prediction[14]
         prediction_dto.inf_binary = prediction[15]
-        prediction_dto.inf_supertile = prediction[16] #need to look into this
+        prediction_dto.inf_supertile = prediction[16]
 
         return prediction_dto
 

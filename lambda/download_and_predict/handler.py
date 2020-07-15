@@ -12,7 +12,6 @@ def handler(event: SQSEvent, context: Dict[str, Any]) -> bool:
     prediction_endpoint = os.getenv('PREDICTION_ENDPOINT')
     mlenabler_endpoint = os.getenv('MLENABLER_ENDPOINT')
     super_tile = os.getenv('INF_SUPERTILE')
-    print(super_tile)
 
     assert(imagery)
     assert(prediction_id)
@@ -37,7 +36,6 @@ def handler(event: SQSEvent, context: Dict[str, Any]) -> bool:
     if super_tile == 'True': 
 
         dap = SuperTileDownloader(imagery=imagery, mlenabler_endpoint=mlenabler_endpoint, prediction_endpoint=prediction_endpoint)
-        print('is supertile')
         tile_indices, payload = dap.get_prediction_payload(tiles, model_type)
 
     else: 
@@ -48,8 +46,6 @@ def handler(event: SQSEvent, context: Dict[str, Any]) -> bool:
 
         # send prediction request
         preds = dap.od_post_prediction(payload, tiles, prediction_id)
-
-        #print(preds);
 
         if len(preds["predictions"]) == 0:
             print('RESULT: No Predictions')
@@ -66,10 +62,7 @@ def handler(event: SQSEvent, context: Dict[str, Any]) -> bool:
         inferences = inferences.split(',')
 
         # send prediction request
-        print(tiles)
         preds = dap.cl_post_prediction(payload, tiles, prediction_id, inferences)
-
-        #print(preds);
 
         # Save the prediction to ML-Enabler
         dap.save_prediction(prediction_id, preds)

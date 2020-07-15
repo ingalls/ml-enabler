@@ -47,7 +47,6 @@
                         <label class='checkbox-container px6'>
                             Supertile:
                             <input :disabled='prediction.infType !== "detection"' v-model='prediction.infSupertile' type='checkbox' />
-                            <!-- <input v-model='prediction.infSupertile' type='checkbox' /> -->
                             <div class='checkbox mx6'>
                                 <svg class='icon'><use xlink:href='#icon-check' /></svg>
                             </div>

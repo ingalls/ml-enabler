@@ -34,11 +34,7 @@
             "Type": "Number",
             "Default": 10,
             "Description": "Max number of TFServing Images"
-        }, 
-        "TileZoom":{
-            "Type": "Number", 
-            "Description": "Tile Zoom Level"
-        },
+        },  
         "InfSupertile": {
             "Type": "String", 
             "Description": "Model was trained and should inference on supertiles"
