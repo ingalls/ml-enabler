@@ -336,11 +336,11 @@ export default {
                     paint: {
                         'fill-color': [
                             'case',
-                            ['==', ["feature-state", `v_${inf}`], false], '#ffffff',
-                            ['==', ["feature-state", `v_${inf}`], true], '#00ff00',
+                            ['==', ["feature-state", `v_${inf}`], false], '#ec747e',
+                            ['==', ["feature-state", `v_${inf}`], true], '#00b6b0',
                             ['==', ['get', `v_${inf}`], false], '#ffffff',
-                            ['==', ['get', `v_${inf}`], true], '#00ff00',
-                            '#ff0000'
+                            ['==', ['get', `v_${inf}`], true], '#ec747e',
+                            '#f9ce99'
                         ],
                         'fill-opacity': [
                             'number',
