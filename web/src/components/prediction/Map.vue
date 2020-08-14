@@ -128,9 +128,9 @@
                 </div>
         </div>
         <div class='grid txt-xs align-center'>
-            <div class='col col--4 wmin24'>Unvalidated</div>
-            <div class='col col--4 wmin24'>Validated<br>True</div>
-            <div class='col col--4 wmin24'>Validated <br>False</div>
+            <div class='col col--4'>Unvalidated</div>
+            <div class='col col--4'>Validated<br>True</div>
+            <div class='col col--4'>Validated <br>False</div>
         </div>
     </div>
 </div>
