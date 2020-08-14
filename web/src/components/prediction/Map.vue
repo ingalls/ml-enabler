@@ -338,9 +338,9 @@ export default {
                             'case',
                             ['==', ["feature-state", `v_${inf}`], false], '#ec747e',
                             ['==', ["feature-state", `v_${inf}`], true], '#00b6b0',
-                            ['==', ['get', `v_${inf}`], false], '#ffffff',
+                            ['==', ['get', `v_${inf}`], false], '#ec747e',
                             ['==', ['get', `v_${inf}`], true], '#ec747e',
-                            '#f9ce99'
+                            '#ffffff'
                         ],
                         'fill-opacity': [
                             'number',
