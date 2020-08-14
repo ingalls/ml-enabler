@@ -8,25 +8,6 @@
             </div>
         </div>
 
-<div class='w240 round shadow-darken10 px12 py12 txt-s'>
-  <div class='flex-parent flex-parent--center-main flex-parent--center-cross align-center'>
-    <div class='flex-child flex-child--grow wmin24'>
-      <span class='inline-block w12 h12 round-full bg-gray-light'></span>
-    </div>
-    <div class='flex-child flex-child--grow wmin24'>
-      <span class='inline-block w12 h12 round-full bg-blue-light'></span>
-    </div>
-    <div class='flex-child flex-child--grow wmin24'>
-      <span class='inline-block w12 h12 round-full bg-pink-light'></span>
-    </div>
-  </div>
-  <div class='grid txt-xs align-center'>
-    <div class='col col--4 wmin24'>Unvalidated</div>
-    <div class='col col--4 wmin24'>Validated<br>True</div>
-    <div class='col col--4 wmin24'>Validated <br>False</div>
-  </div>
-</div>
-
         <template v-if='tilejson'>
             <div class='align-center pb6'>Prediction Tiles</div>
 
@@ -135,6 +116,28 @@
                 </div>
             </div>
         </template>
+
+        <div class='my18'></div>
+        <div class='flex-parent flex-parent--center-main'>
+        <div class='w240 round shadow-darken10 px12 py12 txt-s'>
+        <div class='flex-parent flex-parent--center-main flex-parent--center-cross align-center'>
+            <div class='flex-child flex-child--grow wmin24'>
+            <span class='inline-block w12 h12 round-full bg-gray-light'></span>
+            </div>
+            <div class='flex-child flex-child--grow wmin24'>
+            <span class='inline-block w12 h12 round-full bg-blue-light'></span>
+            </div>
+            <div class='flex-child flex-child--grow wmin24'>
+            <span class='inline-block w12 h12 round-full bg-pink-light'></span>
+            </div>
+        </div>
+        <div class='grid txt-xs align-center'>
+            <div class='col col--4 wmin24'>Unvalidated</div>
+            <div class='col col--4 wmin24'>Validated<br>True</div>
+            <div class='col col--4 wmin24'>Validated <br>False</div>
+        </div>
+        </div>
+</div>
     </div>
 </template>
 
@@ -454,3 +457,4 @@ export default {
     }
 }
 </script>
+
