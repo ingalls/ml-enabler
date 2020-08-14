@@ -2,12 +2,10 @@
     <div class='col col--12'>
         <div class='col col--12 border-b border--gray-light clearfix mb6'>
             <PredictionHeader/>         
-
             <div class='fr'>
                 <button @click='$emit("refresh")' class='mx3 btn btn--stroke color-gray color-blue-on-hover round'><svg class='icon fl'><use href='#icon-refresh'/></svg></button>
             </div>
         </div>
-
         <template v-if='tilejson'>
             <div class='align-center pb6'>Prediction Tiles</div>
 
@@ -47,7 +45,6 @@
                                     <input v-on:input='opacity = parseInt($event.target.value)' type='range' min=0 max=100 />
                                 </div>
                             </div>
-
                             <div class='col col--12'>
                                 <label>Threshold (<span v-text='threshold'/>%)</label>
                                 <div class='range range--s color-gray'>
@@ -116,27 +113,26 @@
                 </div>
             </div>
         </template>
-
-        <div class='my18'></div>
-        <div class='flex-parent flex-parent--center-main'>
-        <div class='w240 round shadow-darken10 px12 py12 txt-s'>
-        <div class='flex-parent flex-parent--center-main flex-parent--center-cross align-center'>
-            <div class='flex-child flex-child--grow wmin24'>
-            <span class='inline-block w12 h12 round-full bg-gray-light'></span>
-            </div>
-            <div class='flex-child flex-child--grow wmin24'>
-            <span class='inline-block w12 h12 round-full bg-blue-light'></span>
-            </div>
-            <div class='flex-child flex-child--grow wmin24'>
-            <span class='inline-block w12 h12 round-full bg-pink-light'></span>
-            </div>
+        <!-- <div class='my18'></div> -->
+        <div class='flex-parent flex-parent--center-main my18'>
+            <div class='w240 round shadow-darken10 px12 py12 txt-s'>
+            <div class='flex-parent flex-parent--center-main flex-parent--center-cross align-center'>
+                <div class='flex-child flex-child--grow wmin24'>
+                    <span class='inline-block w12 h12 round-full bg-gray-light'></span>
+                </div>
+                <div class='flex-child flex-child--grow wmin24'>
+                    <span class='inline-block w12 h12 round-full bg-blue-light'></span>
+                </div>
+                <div class='flex-child flex-child--grow wmin24'>
+                    <span class='inline-block w12 h12 round-full bg-pink-light'></span>
+                </div>
         </div>
         <div class='grid txt-xs align-center'>
             <div class='col col--4 wmin24'>Unvalidated</div>
             <div class='col col--4 wmin24'>Validated<br>True</div>
             <div class='col col--4 wmin24'>Validated <br>False</div>
         </div>
-        </div>
+    </div>
 </div>
     </div>
 </template>
