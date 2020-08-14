@@ -113,7 +113,6 @@
                 </div>
             </div>
         </template>
-        <!-- <div class='my18'></div> -->
         <div class='flex-parent flex-parent--center-main my18'>
             <div class='w240 round shadow-darken10 px12 py12 txt-s'>
             <div class='flex-parent flex-parent--center-main flex-parent--center-cross align-center'>
