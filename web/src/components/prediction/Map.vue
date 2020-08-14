@@ -1,12 +1,31 @@
 <template>
     <div class='col col--12'>
         <div class='col col--12 border-b border--gray-light clearfix mb6'>
-            <PredictionHeader/>
+            <PredictionHeader/>         
 
             <div class='fr'>
                 <button @click='$emit("refresh")' class='mx3 btn btn--stroke color-gray color-blue-on-hover round'><svg class='icon fl'><use href='#icon-refresh'/></svg></button>
             </div>
         </div>
+
+<div class='w240 round shadow-darken10 px12 py12 txt-s'>
+  <div class='flex-parent flex-parent--center-main flex-parent--center-cross align-center'>
+    <div class='flex-child flex-child--grow wmin24'>
+      <span class='inline-block w12 h12 round-full bg-gray-light'></span>
+    </div>
+    <div class='flex-child flex-child--grow wmin24'>
+      <span class='inline-block w12 h12 round-full bg-blue-light'></span>
+    </div>
+    <div class='flex-child flex-child--grow wmin24'>
+      <span class='inline-block w12 h12 round-full bg-pink-light'></span>
+    </div>
+  </div>
+  <div class='grid txt-xs align-center'>
+    <div class='col col--4 wmin24'>Unvalidated</div>
+    <div class='col col--4 wmin24'>Validated and True</div>
+    <div class='col col--4 wmin24'>Validated and False</div>
+  </div>
+</div>
 
         <template v-if='tilejson'>
             <div class='align-center pb6'>Prediction Tiles</div>
