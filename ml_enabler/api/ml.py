@@ -261,6 +261,54 @@ class GetAllModels(Resource):
             current_app.logger.error(error_msg)
             return err(500, error_msg), 500
 
+class PredictionImport(Resource):
+    @login_required
+    def post(self, model_id, prediction_id):
+        """
+        Import a file of GeoJSON inferences into the prediction
+
+        Typically used to seed TFRecord creation preceding model creation
+        ---
+        produces:
+            - application/json
+        responses:
+            200:
+                description: ID of the prediction
+            400:
+                description: Invalid Request
+            500:
+                description: Internal Server Error
+        """
+
+        files = list(request.files.keys())
+        if len(files) == 0:
+            return err(400, "File not found in request"), 400
+
+        inferences = request.files[files[0]]
+
+        try:
+            pred = PredictionService.get_prediction_by_id(prediction_id)
+
+            infstream = io.BytesIO()
+            inferences.save(infstream)
+            inferences = infstream.getvalue().decode('UTF-8').split('\n')
+
+            for inf in inferences:
+                if len(inf) == 0:
+                    continue
+                feat = geojson.loads(inf)
+
+                print(feat)
+
+        except PredictionsNotFound:
+            return err(404, "Predictions not found"), 404
+        except Exception as e:
+            error_msg = f'Unhandled error: {str(e)}'
+            current_app.logger.error(error_msg)
+            return err(500, error_msg), 500
+
+
+
 class PredictionExport(Resource):
     """ Export Prediction Inferences to common formats """
 
@@ -869,7 +917,7 @@ class PredictionStackAPI(Resource):
                 return err(500, "Failed to get stack info"), 500
 
 class PredictionUploadAPI(Resource):
-    """ Upload raw ML Models to the platform """
+    """ Upload Prediction Assets to the platform """
 
     @login_required
     def post(self, model_id, prediction_id):
@@ -1028,6 +1076,7 @@ class PredictionSingleAPI(Resource):
 
             pred = {
                 "predictionsId": prediction.id,
+                "hint": prediction.hint,
                 "modelId": prediction.model_id,
                 "version": prediction.version,
                 "dockerUrl": prediction.docker_url,

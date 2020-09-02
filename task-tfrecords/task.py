@@ -11,6 +11,8 @@ from requests_toolbelt.utils import dump
 from zipfile import ZipFile
 
 from model import train
+from generate_datanpz import download_img_match_labels, make_datanpz
+from generate_tfrecords import create_tfr
 
 s3 = boto3.client('s3')
 
@@ -52,36 +54,20 @@ def get_asset(bucket, key):
 
     return '/tmp/' + dirr
 
+
+#TO-DO allow users to upload vector file, or the ability to get vector file from S3 via http
+def get_label_npz(model_id, prediction_id):
+    payload = {'format':'npz', 'inferences':'all', 'threshold': 0}
+    r = requests.get(api + '/v1/model/' + model_id + '/prediction/' + prediction_id + '/export', params=payload,
+                    auth=HTTPBasicAuth('machine', auth))
+    r.raise_for_status()
+    with open('/tmp/labels.npz', 'wb') as f:
+        f.write(r.content)
+    return f
+
 def increment_versions(version):
     v = semver.VersionInfo.parse(version)
     return v.bump_minor()
-
-def get_versions(model_id):
-    r = requests.get(api + '/v1/model/' + model_id + '/prediction/all', auth=HTTPBasicAuth('machine', auth))
-    r.raise_for_status()
-    preds = r.json()
-    version_lst = []
-    for pred_dict in preds:
-        version_lst.append(pred_dict['version'])
-    version_highest = str(max(map(semver.VersionInfo.parse, version_lst)))
-    return version_highest
-
-def post_pred(pred, version):
-    data_pred = {
-        'modelId': pred['modelId'],
-        'version': version,
-        'tileZoom': pred['tileZoom'],
-        'infList': pred['infList'],
-        'infType':  pred['infType'],
-        'infBinary':  pred['infBinary'],
-        'infSupertile': pred['infSupertile']
-    }
-
-    r = requests.post(api + '/v1/model/' + model_id + '/prediction',  json=data_pred, auth=HTTPBasicAuth('machine', auth))
-    r.raise_for_status()
-    print(r.status_code)
-    pred = r.json()
-    return pred['prediction_id']
 
 def update_link(pred, link_type, zip_path):
     payload = {'type': link_type}
@@ -113,38 +99,15 @@ if supertile:
 else:
     x_feature_shape = [-1, 256, 256, 3]
 
-v = get_versions(model_id)
+get_label_npz(model_id, prediction_id)
 
-model = get_asset(bucket, pred['modelLink'].replace(bucket + '/', ''))
-checkpoint = get_asset(bucket, pred['checkpointLink'].replace(bucket + '/', ''))
+# download image tiles that match validated labels.npz file
+download_img_match_labels(labels_folder='/tmp', imagery=imagery, folder='/tmp/tiles', zoom=zoom, supertile=supertile)
 
-print(model)
-print(checkpoint)
+# create data.npz file that matchs up images and labels
+make_datanpz(dest_folder='/tmp', imagery=imagery)
 
-#get train and val number of samples
-d = np.load('/tmp/data.npz')
-n_train_samps = d['y_train'].shape[0]
-n_val_samps = d['y_val'].shape[0]
+#convert data.npz into tf-records
+create_tfr(npz_path='/tmp/data.npz', city='city')
 
-# conduct re-training
-train(tf_train_steps=200, tf_dir='/tmp/tfrecords.zip',
-       retraining_weights='/tmp/checkpoint.zip',
-       n_classes=len(inflist), class_names=inflist,  x_feature_shape=x_feature_shape,
-       n_train_samps=n_train_samps, n_val_samps=n_val_samps)
-
-# increment model version
-updated_version = str(increment_versions(version=v))
-print(updated_version)
-
-
-# post new pred
-newpred_id = post_pred(pred=pred, version=updated_version)
-newpred = get_pred(model_id, newpred_id)
-
-# update model link
-update_link(newpred, link_type='model', zip_path ='/ml/models.zip')
-print("models link updated")
-
-# update checkpoint
-update_link(newpred, link_type='checkpoint', zip_path = '/ml/checkpoint.zip')
-print("checkpoint link updated")
+# TODO - Upload tf-records to MLEnabler

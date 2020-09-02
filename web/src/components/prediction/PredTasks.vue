@@ -2,7 +2,7 @@
     <div class='col col--12'>
         <div class='col col--12 border-b border--gray-light clearfix mb6'>
             <PredictionHeader
-                v-on:mode='mode = $event'
+                :prediction='prediction'
             />
         </div>
         <template v-if='!prediction'>
@@ -113,7 +113,7 @@ import PredictionHeader from './PredictionHeader.vue';
 import UploadPrediction from './UploadPrediction.vue';
 
 export default {
-    name: 'Retrain',
+    name: 'PredTasks',
     props: ['meta', 'prediction', 'tilejson'],
     data: function() {
         return {
